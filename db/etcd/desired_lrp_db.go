@@ -9,6 +9,7 @@ import (
 	"github.com/nu7hatch/gouuid"
 	"github.com/pivotal-golang/lager"
 	"fmt"
+	"strings"
 )
 
 type guidSet struct {
@@ -312,6 +313,22 @@ func (db *ETCDDB) DesireLRP(logger lager.Logger, desiredLRP *models.DesiredLRP) 
 
 	logger.Info("DESIRING-LRP-BABY", lager.Data{"desired-lrp": desiredLRP, "env-vars": fmt.Sprintf("%v",desiredLRP.EnvironmentVariables)})
 
+	fmt.Printf("\n\n\nCOPYING TAGS FROM DESIRED_LRP (DesireLRP()) BABY!: %v\n\n\n", desiredLRP.EnvironmentVariables)
+	var tags []string
+	for _, action := range desiredLRP.Action.GetCodependentAction().GetActions() {
+		runAction, ok := action.(*models.RunAction)
+		if ok {
+			env := runAction.Env
+			for _, envVar := range env {
+				fmt.Printf("\n\n\nWE GOT AN ENV VAR!: %s:%s\n\n\n", envVar.Name, envVar.Value)
+				if envVar.Name == "DIEGO_BRAIN_TAG" {
+					tags = strings.Split(envVar.Value, ",")
+				}
+			}
+		}
+	}
+	fmt.Printf("\n\n\nCOPIED TAGS FROM DESIRED_LRP (DesireLRP()), BEBBEH!: %v\n\n\n", tags)
+
 	err := db.createDesiredLRPRunInfo(logger, &runInfo)
 	if err != nil {
 		return err
@@ -326,6 +343,12 @@ func (db *ETCDDB) DesireLRP(logger lager.Logger, desiredLRP *models.DesiredLRP) 
 		}
 		return schedulingErr
 	}
+
+
+
+	schedulingInfo.Tags = tags
+
+	logger.Info("SCHEDULING_INFO_FOR-LRP-BABY", lager.Data{"schedulingInfo": schedulingInfo, "tags": fmt.Sprintf("%v",schedulingInfo.Tags)})
 
 	db.startInstanceRange(logger, 0, schedulingInfo.Instances, &schedulingInfo)
 	return nil

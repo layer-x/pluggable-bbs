@@ -7,6 +7,7 @@ import (
 
 	"github.com/cloudfoundry-incubator/bbs/format"
 	"strings"
+	"fmt"
 )
 
 const PreloadedRootFSScheme = "preloaded"
@@ -87,14 +88,15 @@ func (desired *DesiredLRP) ApplyUpdate(update *DesiredLRPUpdate) *DesiredLRP {
 }
 
 func (d *DesiredLRP) DesiredLRPKey() DesiredLRPKey {
-
+	fmt.Printf("\n\n\nGENERATING DESIRED LRP KEY BABY!: %v\n\n\n", d.EnvironmentVariables)
 	var tags []string
 	for _, envVar := range d.EnvironmentVariables {
+		fmt.Printf("\n\n\nWE GOT AN ENV VAR!: %s:%s\n\n\n", envVar.Name, envVar.Value)
 		if envVar.Name == "DIEGO_BRAIN_TAG" {
 			tags = strings.Split(envVar.Value, ",")
 		}
 	}
-
+	fmt.Printf("\n\n\nGENERATING tags for DESIRED LRP KEY, BEBBEH!: %v\n\n\n", tags)
 	return NewDesiredLRPKey(d.ProcessGuid, d.Domain, d.LogGuid, tags)
 }
 

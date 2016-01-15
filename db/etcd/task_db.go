@@ -6,6 +6,7 @@ import (
 	"github.com/cloudfoundry-incubator/auctioneer"
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/pivotal-golang/lager"
+	"strings"
 )
 
 const NO_TTL = 0
@@ -68,6 +69,27 @@ func (db *ETCDDB) taskByGuidWithIndex(logger lager.Logger, taskGuid string) (*mo
 	return task, node.ModifiedIndex, nil
 }
 
+func getTagsFromActionTree(action *models.Action) []string {
+	var tags []string
+	for _, action := range action.GetTimeoutAction().GetAction().GetSerialAction().GetActions() {
+		emitProgressAction, ok := action.(*models.EmitProgressAction)
+		if ok {
+			runAction, ok := emitProgressAction.GetAction().(*models.RunAction)
+			if ok {
+				env := runAction.GetEnv()
+				for _, envVar := range env {
+					fmt.Printf("\n\n\nWE GOT AN ENV VAR!: %s:%s\n\n\n", envVar.Name, envVar.Value)
+					if envVar.Name == "DIEGO_BRAIN_TAG" {
+						tags = strings.Split(envVar.Value, ",")
+						return tags
+					}
+				}
+			}
+		}
+	}
+	return tags
+}
+
 func (db *ETCDDB) DesireTask(logger lager.Logger, taskDef *models.TaskDefinition, taskGuid, domain string) error {
 	logger = logger.Session("desire-task", lager.Data{"task-guid": taskGuid})
 	logger.Info("starting")
@@ -97,6 +119,20 @@ func (db *ETCDDB) DesireTask(logger lager.Logger, taskDef *models.TaskDefinition
 
 	logger.Debug("requesting-task-auction")
 	taskStartRequest := auctioneer.NewTaskStartRequestFromModel(task)
+
+	fmt.Printf("\n\n\nGENERATING START TASK REQUEST BABY!: %v\n\n\n", task.EnvironmentVariables)
+	var tags = getTagsFromActionTree(task.Action)
+
+	for _, envVar := range task.EnvironmentVariables {
+		fmt.Printf("\n\n\nWE GOT AN ENV VAR!: %s:%s\n\n\n", envVar.Name, envVar.Value)
+		if envVar.Name == "DIEGO_BRAIN_TAG" {
+			tags = strings.Split(envVar.Value, ",")
+		}
+	}
+	fmt.Printf("\n\n\nGENERATED tags for START TASK REQUEST, BEBBEH!: %v\n\n\n", tags)
+
+	taskStartRequest.Tags = tags
+
 	err = db.auctioneerClient.RequestTaskAuctions([]*auctioneer.TaskStartRequest{&taskStartRequest})
 	if err != nil {
 		logger.Error("failed-requesting-task-auction", err)
