@@ -8,6 +8,7 @@ import (
 	"github.com/coreos/go-etcd/etcd"
 	"github.com/nu7hatch/gouuid"
 	"github.com/pivotal-golang/lager"
+	"fmt"
 )
 
 type guidSet struct {
@@ -308,6 +309,8 @@ func (db *ETCDDB) DesireLRP(logger lager.Logger, desiredLRP *models.DesiredLRP) 
 	defer logger.Info("complete")
 
 	schedulingInfo, runInfo := desiredLRP.CreateComponents(db.clock.Now())
+
+	logger.Info("DESIRING-LRP-BABY", lager.Data{"desired-lrp": desiredLRP, "env-vars": fmt.Sprintf("%v",desiredLRP.EnvironmentVariables)})
 
 	err := db.createDesiredLRPRunInfo(logger, &runInfo)
 	if err != nil {

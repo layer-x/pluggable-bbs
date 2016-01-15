@@ -35,8 +35,8 @@ type ActualLRPFilter struct {
 	CellID string
 }
 
-func NewActualLRPKey(processGuid string, index int32, domain string) ActualLRPKey {
-	return ActualLRPKey{processGuid, index, domain}
+func NewActualLRPKey(processGuid string, index int32, domain string, tags ...string) ActualLRPKey {
+	return ActualLRPKey{processGuid, index, domain, tags}
 }
 
 func NewActualLRPInstanceKey(instanceGuid string, cellId string) ActualLRPInstanceKey {

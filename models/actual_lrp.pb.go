@@ -67,9 +67,10 @@ func (m *PortMapping) GetHostPort() uint32 {
 }
 
 type ActualLRPKey struct {
-	ProcessGuid string `protobuf:"bytes,1,opt,name=process_guid" json:"process_guid"`
-	Index       int32  `protobuf:"varint,2,opt,name=index" json:"index"`
-	Domain      string `protobuf:"bytes,3,opt,name=domain" json:"domain"`
+	ProcessGuid string   `protobuf:"bytes,1,opt,name=process_guid" json:"process_guid"`
+	Index       int32    `protobuf:"varint,2,opt,name=index" json:"index"`
+	Domain      string   `protobuf:"bytes,3,opt,name=domain" json:"domain"`
+	Tags        []string `protobuf:"bytes,4,rep,name=tags" json:"tags,omitempty"`
 }
 
 func (m *ActualLRPKey) Reset()      { *m = ActualLRPKey{} }
@@ -94,6 +95,13 @@ func (m *ActualLRPKey) GetDomain() string {
 		return m.Domain
 	}
 	return ""
+}
+
+func (m *ActualLRPKey) GetTags() []string {
+	if m != nil {
+		return m.Tags
+	}
+	return nil
 }
 
 type ActualLRPInstanceKey struct {
@@ -282,6 +290,14 @@ func (this *ActualLRPKey) Equal(that interface{}) bool {
 	if this.Domain != that1.Domain {
 		return false
 	}
+	if len(this.Tags) != len(that1.Tags) {
+		return false
+	}
+	for i := range this.Tags {
+		if this.Tags[i] != that1.Tags[i] {
+			return false
+		}
+	}
 	return true
 }
 func (this *ActualLRPInstanceKey) Equal(that interface{}) bool {
@@ -419,7 +435,8 @@ func (this *ActualLRPKey) GoString() string {
 	s := strings.Join([]string{`&models.ActualLRPKey{` +
 		`ProcessGuid:` + fmt.Sprintf("%#v", this.ProcessGuid),
 		`Index:` + fmt.Sprintf("%#v", this.Index),
-		`Domain:` + fmt.Sprintf("%#v", this.Domain) + `}`}, ", ")
+		`Domain:` + fmt.Sprintf("%#v", this.Domain),
+		`Tags:` + fmt.Sprintf("%#v", this.Tags) + `}`}, ", ")
 	return s
 }
 func (this *ActualLRPInstanceKey) GoString() string {
@@ -569,6 +586,21 @@ func (m *ActualLRPKey) MarshalTo(data []byte) (int, error) {
 	i++
 	i = encodeVarintActualLrp(data, i, uint64(len(m.Domain)))
 	i += copy(data[i:], m.Domain)
+	if len(m.Tags) > 0 {
+		for _, s := range m.Tags {
+			data[i] = 0x22
+			i++
+			l = len(s)
+			for l >= 1<<7 {
+				data[i] = uint8(uint64(l)&0x7f | 0x80)
+				l >>= 7
+				i++
+			}
+			data[i] = uint8(l)
+			i++
+			i += copy(data[i:], s)
+		}
+	}
 	return i, nil
 }
 
@@ -757,6 +789,12 @@ func (m *ActualLRPKey) Size() (n int) {
 	n += 1 + sovActualLrp(uint64(m.Index))
 	l = len(m.Domain)
 	n += 1 + l + sovActualLrp(uint64(l))
+	if len(m.Tags) > 0 {
+		for _, s := range m.Tags {
+			l = len(s)
+			n += 1 + l + sovActualLrp(uint64(l))
+		}
+	}
 	return n
 }
 
@@ -849,6 +887,7 @@ func (this *ActualLRPKey) String() string {
 		`ProcessGuid:` + fmt.Sprintf("%v", this.ProcessGuid) + `,`,
 		`Index:` + fmt.Sprintf("%v", this.Index) + `,`,
 		`Domain:` + fmt.Sprintf("%v", this.Domain) + `,`,
+		`Tags:` + fmt.Sprintf("%v", this.Tags) + `,`,
 		`}`,
 	}, "")
 	return s
@@ -1167,6 +1206,31 @@ func (m *ActualLRPKey) Unmarshal(data []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			m.Domain = string(data[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Tags", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			postIndex := iNdEx + int(stringLen)
+			if stringLen < 0 {
+				return ErrInvalidLengthActualLrp
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Tags = append(m.Tags, string(data[iNdEx:postIndex]))
 			iNdEx = postIndex
 		default:
 			var sizeOfWire int

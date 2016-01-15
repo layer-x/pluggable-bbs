@@ -72,6 +72,7 @@ func (db *ETCDDB) DesireTask(logger lager.Logger, taskDef *models.TaskDefinition
 	logger = logger.Session("desire-task", lager.Data{"task-guid": taskGuid})
 	logger.Info("starting")
 	defer logger.Info("finished")
+	logger.Info("DESIRING-TASK-YO", lager.Data{"task": taskDef})
 
 	task := &models.Task{
 		TaskDefinition: taskDef,

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/cloudfoundry-incubator/bbs/format"
+	"strings"
 )
 
 const PreloadedRootFSScheme = "preloaded"
@@ -86,7 +87,15 @@ func (desired *DesiredLRP) ApplyUpdate(update *DesiredLRPUpdate) *DesiredLRP {
 }
 
 func (d *DesiredLRP) DesiredLRPKey() DesiredLRPKey {
-	return NewDesiredLRPKey(d.ProcessGuid, d.Domain, d.LogGuid)
+
+	var tags []string
+	for _, envVar := range d.EnvironmentVariables {
+		if envVar.Name == "DIEGO_BRAIN_TAG" {
+			tags = strings.Split(envVar.Value, ",")
+		}
+	}
+
+	return NewDesiredLRPKey(d.ProcessGuid, d.Domain, d.LogGuid, tags)
 }
 
 func (d *DesiredLRP) DesiredLRPResource() DesiredLRPResource {
@@ -222,11 +231,12 @@ func (desired *DesiredLRPUpdate) Validate() error {
 	return validationError.ToError()
 }
 
-func NewDesiredLRPKey(processGuid, domain, logGuid string) DesiredLRPKey {
+func NewDesiredLRPKey(processGuid, domain, logGuid string, tags []string) DesiredLRPKey {
 	return DesiredLRPKey{
 		ProcessGuid: processGuid,
 		Domain:      domain,
 		LogGuid:     logGuid,
+		Tags: tags,
 	}
 }
 

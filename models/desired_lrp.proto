@@ -54,6 +54,7 @@ message DesiredLRPKey {
   optional string process_guid = 1;
   optional string domain = 2;
   optional string log_guid = 3;
+  repeated string tags = 4;
 }
 
 message DesiredLRPResource {

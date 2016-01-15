@@ -701,6 +701,8 @@ func (s *startRequests) Add(logger lager.Logger, actual *models.ActualLRPKey) {
 		return
 	}
 
+	logger.Info("ADDING-DESIRED-LRP-BABY", lager.Data{"actual-lrp": actual, "desired-lrp": desiredLRP, "desired-lrp-env": fmt.Sprintf("%v", desiredLRP.EnvironmentVariables)})
+
 	start, found := s.startMap[desiredLRP.ProcessGuid]
 	if !found {
 		startRequest := auctioneer.NewLRPStartRequestFromModel(desiredLRP, int(actual.Index))
