@@ -71,11 +71,11 @@ func (db *ETCDDB) taskByGuidWithIndex(logger lager.Logger, taskGuid string) (*mo
 
 func getTagsFromActionTree(action *models.Action) []string {
 	var tags []string
-	for _, action := range action.GetTimeoutAction().GetAction().GetSerialAction().GetActions() {
-		emitProgressAction, ok := action.(*models.EmitProgressAction)
-		if ok {
-			runAction, ok := emitProgressAction.GetAction().(*models.RunAction)
-			if ok {
+	for _, serialAction := range action.GetTimeoutAction().GetAction().GetSerialAction().GetActions() {
+		emitProgressAction := serialAction.GetEmitProgressAction()
+		if emitProgressAction != nil {
+			runAction := emitProgressAction.GetAction().GetRunAction()
+			if runAction != nil {
 				env := runAction.GetEnv()
 				for _, envVar := range env {
 					fmt.Printf("\n\n\nWE GOT AN ENV VAR!: %s:%s\n\n\n", envVar.Name, envVar.Value)

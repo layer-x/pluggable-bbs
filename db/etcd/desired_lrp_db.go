@@ -316,8 +316,8 @@ func (db *ETCDDB) DesireLRP(logger lager.Logger, desiredLRP *models.DesiredLRP) 
 	fmt.Printf("\n\n\nCOPYING TAGS FROM DESIRED_LRP (DesireLRP()) BABY!: %v\n\n\n", desiredLRP.EnvironmentVariables)
 	var tags []string
 	for _, action := range desiredLRP.Action.GetCodependentAction().GetActions() {
-		runAction, ok := action.(*models.RunAction)
-		if ok {
+		runAction := action.GetRunAction()
+		if runAction != nil {
 			env := runAction.Env
 			for _, envVar := range env {
 				fmt.Printf("\n\n\nWE GOT AN ENV VAR!: %s:%s\n\n\n", envVar.Name, envVar.Value)
