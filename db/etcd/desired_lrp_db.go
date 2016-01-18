@@ -337,6 +337,8 @@ func (db *ETCDDB) DesireLRP(logger lager.Logger, desiredLRP *models.DesiredLRP) 
 		return err
 	}
 
+	schedulingInfo.Tags = tags
+
 	schedulingErr := db.createDesiredLRPSchedulingInfo(logger, &schedulingInfo)
 	if schedulingErr != nil {
 		logger.Info("deleting-orphaned-run-info")
@@ -347,9 +349,6 @@ func (db *ETCDDB) DesireLRP(logger lager.Logger, desiredLRP *models.DesiredLRP) 
 		return schedulingErr
 	}
 
-
-
-	schedulingInfo.Tags = tags
 
 	logger.Info("SCHEDULING_INFO_FOR-LRP-BABY", lager.Data{"schedulingInfo": schedulingInfo, "tags": fmt.Sprintf("%v",schedulingInfo.Tags)})
 
