@@ -515,6 +515,8 @@ func (db *ETCDDB) requestLRPAuctionForLRPKey(logger lager.Logger, key *models.Ac
 		}
 	}
 
+	logger.Info("REQUESTING_LRP_AUCTION_FOR_LRP_KEY_BABY", lager.Data{"key": key, "schedulingInfo": schedulingInfo, "TAGS": schedulingInfo.Tags})
+
 	lrpStart := auctioneer.NewLRPStartRequestFromSchedulingInfo(schedulingInfo, int(key.Index))
 	err = db.auctioneerClient.RequestLRPAuctions([]*auctioneer.LRPStartRequest{&lrpStart})
 	if err != nil {

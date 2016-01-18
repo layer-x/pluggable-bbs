@@ -181,6 +181,9 @@ func (db *ETCDDB) rawDesiredLRPSchedulingInfo(logger lager.Logger, processGuid s
 		return nil, 0, err
 	}
 
+	logger.Info("GETTING_RAW_DESIRED_SCHEDULING_INFO", lager.Data{"schedulingInfo": model, "TAGS": model.Tags})
+
+
 	return model, node.ModifiedIndex, nil
 }
 
@@ -369,6 +372,8 @@ func (db *ETCDDB) createDesiredLRPSchedulingInfo(logger lager.Logger, scheduling
 		return err
 	}
 
+	logger.Info("SERIALIZED_SOME_SCHEDULING_INFO", lager.Data{"serializedSchedInfo": string(serializedSchedInfo), "schedulingInfo": schedulingInfo, "TAGS": schedulingInfo.Tags})
+
 	logger.Info("persisting-scheduling-info")
 	_, err = db.client.Create(DesiredLRPSchedulingInfoSchemaPath(schedulingInfo.ProcessGuid), serializedSchedInfo, NO_TTL)
 	err = ErrorFromEtcdError(logger, err)
@@ -453,6 +458,9 @@ func (db *ETCDDB) UpdateDesiredLRP(logger lager.Logger, processGuid string, upda
 	if err != nil {
 		return err
 	}
+
+	logger.Info("UPDATING_DESIRED_LRP_probably_scaling_or_something", lager.Data{"schedulingInfo": schedulingInfo, "TAGS": schedulingInfo.Tags})
+
 
 	switch diff := schedulingInfo.Instances - existingInstances; {
 	case diff > 0:
